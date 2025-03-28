@@ -91,7 +91,7 @@ Ultralytics YOLO can also be integrated directly into your Python projects. It a
 from ultralytics import YOLO
 
 # Load a pretrained YOLO11n model
-model = YOLO("yolo11n.pt")
+model = YOLO("train/yolo11n.pt")
 
 # Train the model on the COCO8 dataset for 100 epochs
 train_results = model.train(
