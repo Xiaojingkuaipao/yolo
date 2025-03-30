@@ -290,9 +290,9 @@ class C2f(nn.Module):
             e (float): Expansion ratio.
         """
         super().__init__()
-        self.c = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
-        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.c = int(c2 * e)  # hidden channels 图里的0.5*c_out,就是第一个Conv 块输出的二分之一
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1) # 第一个1*1的卷积层，进行通道变换
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2) # 第二个Conv块，将concatenate之后的特征图转换为c2
         self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
 
     def forward(self, x):

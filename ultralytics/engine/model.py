@@ -28,49 +28,48 @@ from ultralytics.utils import (
 
 class Model(torch.nn.Module):
     """
-    A base class for implementing YOLO models, unifying APIs across different model types.
+    用于实现YOLO模型的基类，统一不同模型类型的API。
 
-    This class provides a common interface for various operations related to YOLO models, such as training,
-    validation, prediction, exporting, and benchmarking. It handles different types of models, including those
-    loaded from local files, Ultralytics HUB, or Triton Server.
+    该类为YOLO模型的各种操作提供了一个通用接口，例如训练、验证、预测、导出和基准测试。
+    它可以处理不同类型的模型，包括从本地文件、Ultralytics HUB或Triton Server加载的模型。
 
-    Attributes:
-        callbacks (dict): A dictionary of callback functions for various events during model operations.
-        predictor (BasePredictor): The predictor object used for making predictions.
-        model (torch.nn.Module): The underlying PyTorch model.
-        trainer (BaseTrainer): The trainer object used for training the model.
-        ckpt (dict): The checkpoint data if the model is loaded from a *.pt file.
-        cfg (str): The configuration of the model if loaded from a *.yaml file.
-        ckpt_path (str): The path to the checkpoint file.
-        overrides (dict): A dictionary of overrides for model configuration.
-        metrics (dict): The latest training/validation metrics.
-        session (HUBTrainingSession): The Ultralytics HUB session, if applicable.
-        task (str): The type of task the model is intended for.
-        model_name (str): The name of the model.
+    属性:
+        callbacks (dict): 模型操作期间各种事件的回调函数字典。
+        predictor (BasePredictor): 用于进行预测的预测器对象。
+        model (torch.nn.Module): 底层的PyTorch模型。
+        trainer (BaseTrainer): 用于训练模型的训练器对象。
+        ckpt (dict): 如果模型是从*.pt文件加载的，则为检查点数据。
+        cfg (str): 如果模型是从*.yaml文件加载的，则为模型配置。
+        ckpt_path (str): 检查点文件的路径。
+        overrides (dict): 模型配置的重写参数字典。
+        metrics (dict): 最新的训练/验证指标。
+        session (HUBTrainingSession): 如果适用，则为Ultralytics HUB会话。
+        task (str): 模型的目标任务类型。
+        model_name (str): 模型的名称。
 
-    Methods:
-        __call__: Alias for the predict method, enabling the model instance to be callable.
-        _new: Initializes a new model based on a configuration file.
-        _load: Loads a model from a checkpoint file.
-        _check_is_pytorch_model: Ensures that the model is a PyTorch model.
-        reset_weights: Resets the model's weights to their initial state.
-        load: Loads model weights from a specified file.
-        save: Saves the current state of the model to a file.
-        info: Logs or returns information about the model.
-        fuse: Fuses Conv2d and BatchNorm2d layers for optimized inference.
-        predict: Performs object detection predictions.
-        track: Performs object tracking.
-        val: Validates the model on a dataset.
-        benchmark: Benchmarks the model on various export formats.
-        export: Exports the model to different formats.
-        train: Trains the model on a dataset.
-        tune: Performs hyperparameter tuning.
-        _apply: Applies a function to the model's tensors.
-        add_callback: Adds a callback function for an event.
-        clear_callback: Clears all callbacks for an event.
-        reset_callbacks: Resets all callbacks to their default functions.
+    方法:
+        __call__: predict方法的别名，使模型实例可调用。
+        _new: 根据配置文件初始化一个新模型。
+        _load: 从检查点文件加载模型。
+        _check_is_pytorch_model: 确保模型是PyTorch模型。
+        reset_weights: 将模型的权重重置为初始状态。
+        load: 从指定文件加载模型权重。
+        save: 将模型的当前状态保存到文件中。
+        info: 记录或返回模型的相关信息。
+        fuse: 融合Conv2d和BatchNorm2d层以优化推理。
+        predict: 执行目标检测预测。
+        track: 执行目标跟踪。
+        val: 在数据集上验证模型。
+        benchmark: 在各种导出格式上对模型进行基准测试。
+        export: 将模型导出为不同格式。
+        train: 在数据集上训练模型。
+        tune: 执行超参数调优。
+        _apply: 将函数应用于模型的张量。
+        add_callback: 为事件添加回调函数。
+        clear_callback: 清除某个事件的所有回调。
+        reset_callbacks: 将所有回调重置为默认函数。
 
-    Examples:
+    示例:
         >>> from ultralytics import YOLO
         >>> model = YOLO("yolo11n.pt")
         >>> results = model.predict("image.jpg")
@@ -86,26 +85,24 @@ class Model(torch.nn.Module):
         verbose: bool = False,
     ) -> None:
         """
-        Initialize a new instance of the YOLO model class.
+        初始化YOLO模型类的新实例。
 
-        This constructor sets up the model based on the provided model path or name. It handles various types of
-        model sources, including local files, Ultralytics HUB models, and Triton Server models. The method
-        initializes several important attributes of the model and prepares it for operations like training,
-        prediction, or export.
+        该构造函数根据提供的模型路径或名称设置模型。它可以处理多种模型来源，包括本地文件、
+        Ultralytics HUB模型和Triton Server模型。该方法初始化模型的几个重要属性，并为训练、预测
+        或导出等操作做好准备。
 
-        Args:
-            model (str | Path): Path or name of the model to load or create. Can be a local file path, a
-                model name from Ultralytics HUB, or a Triton Server model.
-            task (str | None): The task type associated with the YOLO model, specifying its application domain.
-            verbose (bool): If True, enables verbose output during the model's initialization and subsequent
-                operations.
+        参数:
+            model (str | Path): 要加载或创建的模型路径或名称。可以是本地文件路径、Ultralytics HUB
+                的模型名称或Triton Server模型。
+            task (str | None): 与YOLO模型关联的任务类型，指定其应用领域。
+            verbose (bool): 如果为True，则在模型初始化和后续操作期间启用详细输出。
 
-        Raises:
-            FileNotFoundError: If the specified model file does not exist or is inaccessible.
-            ValueError: If the model file or configuration is invalid or unsupported.
-            ImportError: If required dependencies for specific model types (like HUB SDK) are not installed.
+        异常:
+            FileNotFoundError: 如果指定的模型文件不存在或无法访问。
+            ValueError: 如果模型文件或配置无效或不受支持。
+            ImportError: 如果特定模型类型（如HUB SDK）所需的依赖项未安装。
 
-        Examples:
+        示例:
             >>> model = Model("yolo11n.pt")
             >>> model = Model("path/to/model.yaml", task="detect")
             >>> model = Model("hub_model", verbose=True)
@@ -230,23 +227,22 @@ class Model(torch.nn.Module):
 
     def _new(self, cfg: str, task=None, model=None, verbose=False) -> None:
         """
-        Initialize a new model and infer the task type from model definitions.
+        初始化一个新模型，并从模型定义中推断任务类型。
 
-        Creates a new model instance based on the provided configuration file. Loads the model configuration, infers
-        the task type if not specified, and initializes the model using the appropriate class from the task map.
+        根据提供的配置文件创建一个新的模型实例。加载模型配置，如果未指定任务类型，则进行推断，
+        并使用任务映射中的适当类初始化模型。
 
-        Args:
-            cfg (str): Path to the model configuration file in YAML format.
-            task (str | None): The specific task for the model. If None, it will be inferred from the config.
-            model (torch.nn.Module | None): A custom model instance. If provided, it will be used instead of creating
-                a new one.
-            verbose (bool): If True, displays model information during loading.
+        参数:
+            cfg (str): YAML格式的模型配置文件的路径。
+            task (str | None): 模型的具体任务。如果为None，则从配置中推断。
+            model (torch.nn.Module | None): 自定义模型实例。如果提供，则使用该实例而不是创建一个新实例。
+            verbose (bool): 如果为True，则在加载期间显示模型信息。
 
-        Raises:
-            ValueError: If the configuration file is invalid or the task cannot be inferred.
-            ImportError: If the required dependencies for the specified task are not installed.
+        异常:
+            ValueError: 如果配置文件无效或无法推断任务类型。
+            ImportError: 如果指定任务所需的依赖项未安装。
 
-        Examples:
+        示例:
             >>> model = Model()
             >>> model._new("yolo11n.yaml", task="detect", verbose=True)
         """
