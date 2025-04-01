@@ -164,7 +164,7 @@ def build_dataloader(dataset, batch, workers, shuffle=True, rank=-1):
     nd = torch.cuda.device_count()  # number of CUDA devices
     nw = min(os.cpu_count() // max(nd, 1), workers)  # number of workers
     sampler = None if rank == -1 else distributed.DistributedSampler(dataset, shuffle=shuffle)
-    generator = torch.Generator()
+    generator = torch.Generator() # PyTorch 中用于控制随机数生成的类
     generator.manual_seed(6148914691236517205 + RANK)
     return InfiniteDataLoader(
         dataset=dataset,

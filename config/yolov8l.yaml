@@ -33,8 +33,11 @@ backbone:
 
 # YOLOv8.0n head
 head:
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
-  - [[-1, 6], 1, Concat, [1]] # cat backbone P4
+  # [from, repeats, module, args]
+  # 对于repeats>1的参数，args为out_channels,shortcut(默认为False)
+  # 对于out_channel，会根据scales的max_channels调整大小
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 10
+  - [[-1, 6], 1, Concat, [1]] # cat backbone P4 # 11
   - [-1, 3, C2f, [512]] # 12
 
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
